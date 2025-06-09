@@ -1,0 +1,5 @@
+DB_ROOT_PATH=Path to the directory containing the databases (e.g. /.../bird_dataset/dev/)
+
+GCP_PROJECT=GCP project name
+GCP_REGION=GCP region
+GCP_CREDENTIALS=Path to the GCP credentials file (e.g. /.../gcp_credentials/credentials.json)
