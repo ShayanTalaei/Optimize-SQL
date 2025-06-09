@@ -4,5 +4,11 @@ data/
 # .env
 .env
 
+# credentials
+credentials.json
+
 # .DS_Store
 .DS_Store
+
+# pycache
+*.pyc
