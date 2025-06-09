@@ -5,6 +5,7 @@ from typing import Any, Union, List, Dict
 from func_timeout import func_timeout, FunctionTimedOut
 from multiprocessing import Process, Queue
 import threading
+import time
 from queue import Empty
 from enum import Enum
 
@@ -17,17 +18,19 @@ class TimeoutException(Exception):
 
 
 
-def execute_sql(db_path: str, sql: str, fetch: Union[str, int] = "all", timeout: int = 60) -> Any:
+def execute_sql(db_path: str, sql: str, fetch: Union[str, int] = "all", timeout: int = 60, report_time: bool = False) -> Any:
     class QueryThread(threading.Thread):
         def __init__(self):
             threading.Thread.__init__(self)
             self.result = None
+            self.execution_time = None
             self.exception = None
 
         def run(self):
             try:
                 with sqlite3.connect(db_path, timeout=60) as conn:
                     cursor = conn.cursor()
+                    start_time = time.time()
                     cursor.execute(sql)
                     if fetch == "all":
                         self.result = cursor.fetchall()
@@ -40,6 +43,7 @@ def execute_sql(db_path: str, sql: str, fetch: Union[str, int] = "all", timeout:
                         self.result = cursor.fetchmany(fetch)
                     else:
                         raise ValueError("Invalid fetch argument. Must be 'all', 'one', 'random', or an integer.")
+                    self.execution_time = time.time() - start_time
             except Exception as e:
                 self.exception = e
     query_thread = QueryThread()
@@ -50,7 +54,10 @@ def execute_sql(db_path: str, sql: str, fetch: Union[str, int] = "all", timeout:
     if query_thread.exception:
         # logging.error(f"Error in execute_sql: {query_thread.exception}\nSQL: {sql}")
         raise query_thread.exception
-    return query_thread.result
+    if report_time:
+        return query_thread.result, query_thread.execution_time
+    else:
+        return query_thread.result
 
 
 def _clean_sql(sql: str) -> str:
